@@ -1,0 +1,82 @@
+using System;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+public class PlayerMovement : MonoBehaviour
+{
+    
+    private Rigidbody2D rb; // To refrance and take rigidbody2d's properties
+    private SpriteRenderer sp; // class to render 2d sprite
+    private Animator animator; // To refrence and take animator's properties to control and manage animation
+     
+    [SerializeField] private float speedMove; // for object's movement speed
+    [SerializeField] private float jumpPower; // for object's jumping power
+    private float moveHorizontal; // variable for object's movement
+
+    //below are for groundcheck using physics2D.OverLapCircle
+    public Transform groundCheck; // Position to check if the player is grounded
+    public LayerMask groundLayer; // To specify object with certain Layer, in which this case the layer represents ground
+    public float groundCheckRadius = 0.2f; // To set radius scale for the circle overlap
+    private bool isGrounding; // to check wether the player is grounded(true) or not(false)
+
+    void Start(){
+
+        //refrencing clasess
+        rb = GetComponent<Rigidbody2D>();
+        sp = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        
+    }
+    void Update(){
+
+        moveHorizontal = Input.GetAxis("Horizontal"); // To take an input from player and return values of -1(A/Left) and 1(D/Right)
+
+        //below is for detecting if there's any object's collider with certain layer(this case is ground) within the circle area.If it is,then it returns value of true and vice versa 
+        isGrounding = Physics2D.OverlapCircle(groundCheck.position,groundCheckRadius,groundLayer);
+        if(Input.GetButton("Jump") && isGrounding){ //If the player pressing space and the isgrounding is true,then execute jump function
+            jump();
+        } 
+
+        animationWalk();
+    }
+
+    void FixedUpdate(){
+
+        characterMove();
+
+    }
+    private void characterMove(){
+
+        rb.velocity = new Vector2(moveHorizontal * speedMove,rb.velocity.y);
+        flip();
+
+    }
+    
+    private void flip(){ // this function is for flipping theplayer object based on where it moves.
+
+        if(moveHorizontal > 0){ // if movehorizontal is greater than 0,or player moving right,then execute this state below
+            // flipx is a spriterenderer property to flip sprite on the x axis
+            sp.flipX = false; //if it sets to false,that means the sprite is not flipped
+        }
+        if(moveHorizontal < 0){ // if movehorizontal is less than 0,or player moving left,then execute this state below
+            sp.flipX = true; //if it sets to true,that means the sprite is flipped
+        }
+        
+        }
+
+        private void jump(){
+
+            rb.velocity = new Vector2(rb.velocity.x,jumpPower); // to jump player
+
+        }
+
+        private void animationWalk(){
+
+        // below is to set value of the parameter "speed" from movehorizontal(-1 to 1) so that it meets the condition for transitioning from idle to walking animation
+        // since we're using mathf.abs,the value that movehorizontal returns always be positive,so that the animation works both ways right or left.
+         animator.SetFloat("speed",Mathf.Abs(moveHorizontal)); 
+
+        }
+
+
+}
